@@ -4,8 +4,7 @@
    import { ApiError } from "../utiles/ApiError.js";
    import { User } from "../models/user.model.js";
    import { uploadOnCloudinary } from "../utiles/Cloudinary.js";
-   import {ApiResponse} from "../utiles/ApiResponse.js"
-
+   import {ApiResponse} from "../utiles/ApiResponse.js"     
 
    const registerUser = asyncHandler(async (req, res) => {
    /*
