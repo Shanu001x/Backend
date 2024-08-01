@@ -8,15 +8,16 @@
 
    const generateAccessAndRefreshToken = async(userId) => {
       try {
-         await User.findById(userId)
+         const user = await User.findById(userId)
          const accessToken = user.generateAccessToken()
          const refreshToken = user.generateRefreshToken()
          user.refreshToken = refreshToken
-         user.save({validateBeforeSave: false})
+         await user.save({ validateBeforeSave: false })
 
          return {accessToken, refreshToken}
 
       } catch (error) {
+         console.error('Error in generateAccessAndRefreshToken:', error);
          throw new ApiError(500, "Something went wrong While generating refresh and access token")
       }
    }
@@ -115,8 +116,8 @@
 // response - Successfully
 
       const {email, username, password} = req.body;
-
-      if (!username || !email) {
+      console.log(email)
+      if (!username && !email) {
          throw new ApiError(400, "Username or email is required")
       }
 
@@ -134,9 +135,9 @@
          throw new ApiError(401, "Invalid user credentials")
        }
 
-       const {refreshToken, accessToken} = await generateAccessAndRefreshToken(user._id)
+       const {accessToken, refreshToken} = await generateAccessAndRefreshToken(  user._id)
 
-       const loggedinUser = await User.findById(user._id).select("-passowrd -refreshToken")
+       const loggedinUser = await User.findById(user._id).select("-password -refreshToken")
 
        const options = {
          httpOnly: true,
