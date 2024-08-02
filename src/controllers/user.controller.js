@@ -5,6 +5,7 @@
    import { User } from "../models/user.model.js";
    import { uploadOnCloudinary } from "../utiles/Cloudinary.js";
    import {ApiResponse} from "../utiles/ApiResponse.js"     
+   import jwt from "jsonwebtoken"
 
    const generateAccessAndRefreshToken = async(userId) => {
       try {
@@ -186,4 +187,58 @@
        )
    })
 
-   export { registerUser, loginUser , logOutUser};
+
+
+
+   const refreshAccessToken = asyncHandler(async(req, res) => {
+      const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+      if (!incomingRefreshToken) {
+         throw new ApiError(401, "unauthorised request")
+      }
+// we change incoming token to decoded token after verification.
+      try {
+         const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET )
+   
+         // taking user information from database through refresh token 
+         const user = await User.findById(decodedToken?._id)
+         
+         if (!user) {
+            throw new ApiError(401, "invlaid refresh token")
+         }
+   
+         // matching decoed token to user's token
+   
+         if (incomingRefreshToken !==  user?.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or used")
+   
+         }
+   
+         const options = {
+            httpOnly: true,
+            secure: true,
+   
+         }
+   
+   
+         const {accessToken, newrefreshToken} = await generateAccessAndRefreshToken(user._id)
+         return res
+         .status(200)
+         .cookie("accessToken", accessToken, options)
+         .cookie("refreshToken", newrefreshToken, options)
+         .json(
+            new ApiResponse(200, {
+               accessToken, refreshToken: newrefreshToken
+            },
+            "Access Token refreshed succesfully"
+         )
+         )
+      } catch (error) {
+         throw new ApiError(401, error?.message || "invalid refresh Token" )
+
+      }
+   })
+
+   export { registerUser, loginUser , logOutUser, refreshAccessToken};
+
+   

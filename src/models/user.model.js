@@ -49,16 +49,17 @@ const userSchema = mongoose.Schema({
 }
 );
 
+// Password hashing
 userSchema.pre('save', async function (next) {
     if(!this.isModified("password")) return next();
      this.password = await bcrypt.hash(this.password, 10)
     next();
 })
-
+// validatePassword
 userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password, this.password)
 }
-
+// generateAccessToken userSchema methods
 userSchema.methods.generateAccessToken = function() {
    return jwt.sign(
         {
@@ -74,6 +75,8 @@ userSchema.methods.generateAccessToken = function() {
                 }
     )
 }
+ 
+// generateRefreshToken userSchema methods
 userSchema.methods.generateRefreshToken = function() {
 
     return jwt.sign(
