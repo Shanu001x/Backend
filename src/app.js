@@ -25,5 +25,5 @@ import userRouter from './routes/user.routes.js'
 //routes declaration
 
 app.use("/api/v1/users", userRouter)
-// https://localhost:8000/api/v1/users - means give the control to users route. lets go to users
+// https://localhost:8000/api/v1/users - means give the control to users route. lets go to user.route.js
 export {app}

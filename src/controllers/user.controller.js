@@ -24,7 +24,7 @@ const generateAccessAndRefreshToken = async (userId) => {
       "Something went wrong While generating refresh and access token"
     );
   }
-};
+};  
 const registerUser = asyncHandler(async (req, res) => {
   /*
       Checking has to be done ----
@@ -63,6 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
   console.log(req.files);
 
+  // Check and Retrieve Cover Image Path:
   let coverImageLocalPath;
   if (
     !req.files &&
@@ -71,6 +72,8 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     coverImageLocalPath = req.files.coverImage[0].path;
   }
+
+  // Check if Avatar is Provided:
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is required");
@@ -82,6 +85,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
+  // Check if Avatar is Provided:
   if (!avatar) {
     throw new ApiError(400, "Avatar is required");
   }
