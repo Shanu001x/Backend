@@ -24,7 +24,7 @@ const generateAccessAndRefreshToken = async (userId) => {
       "Something went wrong While generating refresh and access token"
     );
   }
-};  
+};
 const registerUser = asyncHandler(async (req, res) => {
   /*
       Checking has to be done ----
@@ -212,6 +212,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
+    console.log(decodedToken); // only for mine check that what stores in decoded token
 
     // taking user information from database through refresh token
     const user = await User.findById(decodedToken?._id);
@@ -273,7 +274,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json( new ApiResponse(200, req.user, "Current User fetched Succesfully"));
+    .json(new ApiResponse(200, req.user, "Current User fetched Succesfully"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -354,51 +355,50 @@ const updateUsercoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "cover image updated succesfully  "));
 });
 
-const getUserChannelProfile = asyncHandler(async(req, res) => {
-  const {username} = req.params
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
 
   if (!username?.trim) {
-    throw new ApiError(400, "username is missing ")
-
+    throw new ApiError(400, "username is missing ");
   }
-   const channel = await User.aggregate([
+  const channel = await User.aggregate([
     {
       $match: {
-        username: username?.toLowerCase()
-      }
+        username: username?.toLowerCase(),
+      },
     },
     {
       $lookup: {
         from: "subscriptions",
         localfield: "_id",
         foreignfield: "channel",
-        as: "subscribers"
-      }
+        as: "subscribers",
+      },
     },
     {
       $lookup: {
         from: "subscriptions",
         localfield: "_id",
         foreignfield: "subscriber",
-        as: "subscribedTo" 
-      }
-    }, 
+        as: "subscribedTo",
+      },
+    },
     {
-      $addfields: {
+      $addFields: {
         subscribersCount: {
-          $size: "$subscribers"
+          $size: "$subscribers",
         },
         channelSubscribedCount: {
-          $size: "$subscribedTo"
-        }, 
+          $size: "$subscribedTo",
+        },
         isSubscribed: {
           $cond: {
-            if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
             then: true,
             else: false,
-          }
-        }
-      } 
+          },
+        },
+      },
     },
     {
       $project: {
@@ -409,38 +409,30 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
         isSubscribed: 1,
         avatar: 1,
         coverImage: 1,
-        email: 1  
-      }
-    }
-  ]
-
-)
+        email: 1,
+      },
+    },
+  ]);
 
   if (!channel?.length) {
-    throw new ApiError(401, "channel does not exists")
-
+    throw new ApiError(401, "channel does not exists");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(
-      200, 
-      channel[0],
-      "User channel fetched successfully"
-    )
-  )
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
+});
 
-}) 
-
-const getWatchHistory =   asyncHandler(async(req, res) => {
+const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
       $match: {
-        _id:  new mongoose.Types.ObjectId(req.user._id)
-
-      }, 
-    }, {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
       $lookup: {
         from: "videos",
         localfield: "watchHistory",
@@ -458,34 +450,33 @@ const getWatchHistory =   asyncHandler(async(req, res) => {
                   $project: {
                     fullname: 1,
                     username: 1,
-                    avatar: 1
-                  }
-                }
-              ]
-            }
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
           },
           {
             $addfields: {
               owner: {
-                $first: "$owner"
-              }
-            }
-          }
-        ]
-      }
-    }
-  ])
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
   return res
-  .status(200)
-  .json(
-    new ApiResponse(200,
-      user[0].watchHistory,
-      "watch history fetched succesfully"
-    )
-  )
-})
-
-
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "watch history fetched succesfully"
+      )
+    );
+});
 
 export {
   registerUser,
@@ -498,6 +489,5 @@ export {
   updateUserAvatar,
   updateUsercoverImage,
   getUserChannelProfile,
-  getWatchHistory
-
+  getWatchHistory,
 };
